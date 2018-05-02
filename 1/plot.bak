@@ -1,0 +1,7 @@
+#lang planet neil/sicp
+(define (plot-dash n)
+  (cond ((> n 0)
+         (begin
+          (display "-")
+          (plot-dash (- n 1))))))
+(plot-dash 10)

@@ -1,0 +1,26 @@
+#lang racket
+;(require (file "C:/Users/Mach/Files/scheme/basic/basic.rkt"))
+(provide cont-fract)
+(define (cont-fract n d k)
+  (define (cont i)
+    (if (= k i)
+        1
+        (/ (n i) (+ (d i) (cont (+ i 1))))))
+  (cont 1))
+
+(define fi (/ 1
+              (cont-fract (lambda (i) 1.0)
+            (lambda (i) 1.0)
+            20)))
+fi
+(define (cont-fract-iter n d k)
+  (define (iter ek i)
+    (if (= i k)
+        ek
+        (iter (/ (n (- k i)) (+ (d (- k i)) ek)) (+ i 1))))
+  (iter 1 0))
+(define phi (/ 1
+              (cont-fract-iter (lambda (i) 1.0)
+            (lambda (i) 1.0)
+            12)))
+phi

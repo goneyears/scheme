@@ -1,0 +1,66 @@
+#lang racket
+(require graphics/graphics)
+
+;viewport basic operations
+(open-graphics)
+(define vp (open-viewport "new block window" 500 500))
+
+;basic operations
+(define (add-posn pos1 pos2)
+  (make-posn (+ (posn-x pos1) (posn-x pos2))
+             (+ (posn-y pos1) (posn-y pos2))))
+
+(define (negative posn)
+  (make-posn (- (posn-x posn)) (- (posn-y posn))))
+
+(define (sub-posn pos1 pos2)
+  (add-posn pos1 (negative pos2)))
+
+;basic elements
+  ;line
+(define (line start-posn end-posn)
+  (define (dispatch m)
+    (cond ((eq? m 'start-posn) start-posn)
+          ((eq? m 'end-posn) end-posn)
+          ((eq? m 'draw)
+           ((draw-line vp) start-posn end-posn))))
+  dispatch)
+(define (display-line lne) (lne 'draw))
+(define string (draw-string vp))
+  ;rectangle
+(define (rectangle posn width height)
+  (define (dispatch m)
+    (cond ((eq? m 'posn) posn)
+          ((eq? m 'width) width)
+          ((eq? m 'height) height)
+          ((eq? m 'draw)
+           ((draw-rectangle vp) posn width height))
+          (else (error "Argument should be posn/width/height"))))
+    dispatch)
+(define (position-rectangle rec) (rec 'posn))
+(define (width-rectangle rec) (rec 'width))
+(define (height-rectangle rec) (rec 'height))
+(define (display-rectangle rec) (rec 'draw))
+  
+;advanced basic element
+(define (block posn width height info)
+  (define block-frame-rectangle (rectangle posn width height))
+  (define (dispatch m)
+    (cond ((eq? m 'draw)
+           (begin
+             (display-rectangle block-frame-rectangle)
+             (string posn info)
+             ))
+           (else (block-frame-rectangle m))))
+  dispatch)
+(define (display-block blk) (blk 'draw))
+;test
+(define rec1
+  (rectangle (make-posn 10 20) 200 100))
+(define rec2
+  (rectangle (make-posn 30 40) 200 100))
+(define block1 (block (make-posn 50 66) 200 100 "ddd"))
+(display-block block1)
+(block1 'width)
+(display-rectangle rec1)
+(display-rectangle rec2)

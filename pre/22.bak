@@ -1,0 +1,38 @@
+#lang scheme
+(define (square i)
+  (* i i))
+(define (inc i)
+  (+ i 1))
+(define (elem i)
+  (/ (* (* 2 i) (* 2 (+ i 1))) (square (+ (* 2 i) 1))))
+(define (product term a next b)
+  (if (> a b) 1
+      (* (term a) (product term (next a) next b))))
+(define (sum-iter term a next b)
+  (define (iter a result)
+    (if (> a b) result
+        (iter (next a) (* (term a) result))))
+  (iter a 1))
+(define (product-iter term a next b)
+  (if (> a b) 1
+      (* (term a) (product-iter term (next a) next b))))
+
+(define (accumulate combiner null-value term a next b)
+  (if (> a b) null-value
+      (combiner (term a)
+                (accumulate combiner null-value term (next a) next b))))
+
+(define (accumulate-iter combiner null-value term a next b)
+  (define (iter a result)
+    (if (> a b) result
+        (iter (next a) (combiner (term a) result))))
+  (iter a null-value))
+
+
+(define (sum-com term a next b)
+  (accumulate + 0 term a next b))
+(define (product-com term a next b)
+  (accumulate-iter * 1 term a next b))
+(define (pi4 n)
+  (product-com elem 1 inc n))
+(* (pi4 1000) 4.0)

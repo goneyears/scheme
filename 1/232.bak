@@ -1,0 +1,14 @@
+#lang racket
+(require rnrs/base-6)
+(define (cons a b)
+  (* (expt 2 a) (expt 3 b)))
+(define (eliminate z n)
+  (if (= (mod z n) 0) (eliminate (/ z n) n)
+      z))
+ 
+(define (car z)
+  (let ((x (eliminate z 3)))
+    (log x 2)))
+(define (cdr z)
+  (let ((x (eliminate z 2)))
+    (log x 3)))

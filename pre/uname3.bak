@@ -1,0 +1,15 @@
+#lang racket
+(require graphics/graphics)
+(open-graphics)
+(define vp (open-viewport "A Picture Language" 500 500))
+
+(define draw (draw-viewport vp))
+(define (clear) ((clear-viewport vp)))
+(define line (draw-line vp))
+(draw "white")
+
+(define op (make-posn 
+(define p1 (make-posn 30 10))
+(define p2 (make-posn 30 40))
+(line p1 p2 "black")
+
