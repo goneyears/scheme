@@ -1,5 +1,7 @@
 #lang planet neil/sicp
 
+
+;;;;;;;;;;connector;;;;;;;;;;;;;
 (define (make-connector)
   (let ((value false) (informant false) (constraints '()))
     (define (set-my-value newval setter)
@@ -39,7 +41,7 @@
             (else (error "Unknown operation -- CONNECTOR"
                          request))))
     me))
-
+;;;;;;;;;;functions;;;;;;;;;;;;;
 (define (for-each-except exception procedure list)
   (define (loop items)
     (cond ((null? items) 'done)
@@ -101,11 +103,40 @@
   (connect sum me)
   me)
 ;;;;;;;;;;mul;;;;;;;;;;;;;
+(define (multiplier a1 a2 product)
+  (define (process-new-value)
+    (cond ((and (has-value? a1) (has-value? a2))
+           (set-value! product
+                       (* (get-value a1) (get-value a2))
+                       me))
+          ((and (has-value? a1) (has-value? product))
+           (set-value! a2
+                       (/ (get-value product) (get-value a1))
+                       me))
+          ((and (has-value? a2) (has-value? product))
+           (set-value! a1
+                       (/ (get-value product) (get-value a2))
+                       me))))
+  (define (process-forget-value)
+    (forget-value! product me)
+    (forget-value! a1 me)
+    (forget-value! a2 me)
+    (process-new-value))
+  (define (me request)
+    (cond ((eq? request 'I-have-a-value)
+           (process-new-value))
+          ((eq? request 'I-lost-my-value)
+           (process-forget-value))
+          (else
+           (error "Unknown request -- ADDER" request))))
+  (connect a1 me)
+  (connect a2 me)
+  (connect product me)
+  me)
 
 
 
-
-
+;;;;;;;;;;probe;;;;;;;;;;;
 (define (probe name connector)
   (define (print-probe value)
     (newline)
@@ -128,24 +159,23 @@
   me)
 
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;new-add;;;;;;;;;;;;;;
 (define (new-add a b c sum)
   (let ((inter-sum (make-connector)))
     (adder a b inter-sum)
-    (adder c inter-sum sum))
-  
-  
+    (adder c inter-sum sum))  
     'ok)
-;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;;;;;;;;;application;;;;;;;;;;;;;
 (define a (make-connector))
 (define b (make-connector))
 (define c (make-connector))
-(define sum (make-connector))
-(new-add a b c sum)
+(define p (make-connector))
+(multiplier a b p)
 (probe "add-a" a)
 (probe "add-b" b)
-(probe "add-c" c)
-(probe "sum-c" sum)
-(set-value! a 10 'usr)
-(set-value! b 10 'usr)
-(set-value! c 10 'usr)  
+(probe "p-c" c)
+(probe "p-p" p)
+(set-value! a 12 'usr)
+(set-value! p 2 'usr)
+ 

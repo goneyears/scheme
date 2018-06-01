@@ -1,0 +1,148 @@
+#lang planet neil/sicp
+
+(define (make-connector)
+  (let ((value false) (informant false) (constraints '()))
+    (define (set-my-value newval setter)
+      (cond ((not (has-value? me))
+             (set! value newval)
+             (set! informant setter)
+             (for-each-except setter inform-about-value constraints))
+            ((not (= value newval))
+             (error "contradiction" (list value newval)))
+            (else 'ignored)))
+
+    (define (forget-my-value retractor)
+      (if (eq? retractor informant)
+          (begin (set! value false)
+                 (for-each-except retractor inform-about-no-value constraints))
+          'ignored))
+      
+    (define (connect new-constraint)
+      (if (not (memq new-constraint constraints))
+          (set! constraints (cons new-constraint constraints)))
+      (if (has-value? me)
+          (inform-about-value new-constraint)))
+
+    (define (me request)
+      (cond ((eq? request 'has-value?)
+             (if informant true false))
+            ((eq? request 'set-value!) set-my-value)
+            ((eq? request 'forget) forget-my-value)
+            ((eq? request 'value) value)
+            ((eq? request 'connect) connect)))
+
+    me))
+
+
+(define (has-value? connector)
+  (connector 'has-value?))
+
+(define (set-value! connector newval setter)
+  ((connector 'set-value!) newval setter))
+
+(define (forget-value! connector setter)
+  ((connector 'forget) setter))
+
+(define (get-value connector)
+  (connector 'value))
+
+(define (inform-about-value constraint)
+  (constraint 'I-have-a-value))
+
+(define (inform-about-no-value constraint)
+  (constraint 'I-lost-my-value))
+
+(define (connect connector constraint)
+  ((connector 'connect) constraint))
+
+(define (for-each-except exception procedure list)
+  (define (loop items)
+    (cond ((null? items) 'done)
+          ((eq? (car items) exception) (loop (cdr items)))
+          (else (procedure (car items))
+                (loop (cdr items)))))
+  (loop list))
+;-------------------direct------------------------
+(define (direct p1 p2)
+  (define (process-new-value)
+    (cond ((and (has-value? p1) (not (has-value? p2)))
+           (set-value! p2 (get-value p1) me))
+          ((and (has-value? p2) (not (has-value? p1)))
+           (set-value! p1 (get-value p2) me))))
+
+  (define (process-forget-value)
+    (forget-value! p1 me)
+    (forget-value! p2 me))
+  
+  (define (me request)
+    (cond ((eq? request 'I-have-a-value) (process-new-value))
+          ((eq? request 'I-lost-my-value) (process-forget-value))
+
+
+          ))
+  (connect p1 me)
+  (connect p2 me)
+me)
+
+(define (add a b sum)
+  (define (process-new-value)
+    (cond ((and (has-value? a) (has-value? b))
+           (set-value! sum (+ (get-value a) (get-value b)) me))
+          ((and (has-value? a) (has-value? sum))
+           (set-value! b (- (get-value sum) (get-value a)) me))
+          ((and (has-value? b) (has-value? sum))
+           (set-value! a (- (get-value sum) (get-value b)) me))))
+
+  (define (process-forget-value)
+    (forget-value! a me)
+    (forget-value! b me)
+    (forget-value! sum me))
+
+  (define (me request)
+    (cond ((eq? request 'I-have-a-value) (process-new-value))
+          ((eq? request 'I-lost-my-value) (process-forget-value))
+
+
+          ))
+  (connect a me)
+  (connect b me)
+  (connect sum me)
+me)
+
+;-------------------probe--------------------------
+(define (probe name connector)
+  (define (process-new-value)
+    (newline)
+    (display name)
+    (display "=")
+    (display (get-value connector))
+    (newline))
+
+  (define (process-forget-value)
+    (newline)
+    (display name)
+    (display "=?")
+    (newline))
+  (define (me request)
+    (cond ((eq? request 'I-have-a-value) (process-new-value))
+          ((eq? request 'I-lost-my-value) (process-forget-value))
+          ))
+  (connect connector me)    
+  me)
+
+;-------------------application-------------------
+(define a (make-connector))
+(define b (make-connector))
+(define c (make-connector))
+(define d (make-connector))
+(define e (make-connector))
+(direct a b)
+(add b c d)
+(probe 'a a)
+(probe 'b b)
+(probe 'c c)
+(probe 'd d)
+
+(set-value! a 20 'usr)
+(set-value! c 10 'usr)
+(forget-value! a 'usr)
